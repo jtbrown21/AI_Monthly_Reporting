@@ -8,7 +8,9 @@ import argparse
 from datetime import datetime, timedelta
 
 
-def send_test_webhook(url: str, report_id: str = None):
+from typing import Optional
+
+def send_test_webhook(url: str, report_id: Optional[str] = None):
     """
     Send a test webhook to the specified URL.
     

@@ -13,16 +13,16 @@ class Config:
     # Airtable settings
     AIRTABLE_API_KEY: str
     AIRTABLE_BASE_ID: str
-    AIRTABLE_REPORTS_TABLE: str = "My SF Domain Reports"
-    AIRTABLE_KEYWORD_PERF_TABLE: str = "Keyword Performance"
-    
+
     # GitHub settings
     GITHUB_TOKEN: str
     GITHUB_REPO: str
+
+    # Fields with default values
+    AIRTABLE_REPORTS_TABLE: str = "My SF Domain Reports"
+    AIRTABLE_KEYWORD_PERF_TABLE: str = "Keyword Performance"
     GITHUB_BRANCH: str = "main"
     GITHUB_REPORTS_PATH: str = "reports"
-    
-    # Application settings
     PORT: int = 5000
     DEBUG: bool = False
     LOG_LEVEL: str = "INFO"

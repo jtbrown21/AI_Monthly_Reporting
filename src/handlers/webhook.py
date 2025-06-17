@@ -1,6 +1,9 @@
 """
 Webhook handler for processing SF Domain Report requests.
 """
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Blueprint, request, jsonify
 from typing import Dict, Any
 import json
@@ -8,9 +11,8 @@ import logging
 from datetime import datetime
 
 from config.settings import config
-from src.services.airtable import AirtableService, ReportRecord
+from src.services.airtable import AirtableService
 from src.services.github import GitHubService
-from src.services.aggregator import AggregatorService
 from src.templates.report_html import ReportTemplate
 from src.utils.validators import validate_webhook_payload
 
@@ -33,8 +35,6 @@ def create_webhook_blueprint() -> Blueprint:
         config.GITHUB_BRANCH
     )
     
-    aggregator_service = AggregatorService()
-    
     @webhook_bp.route('/webhook', methods=['POST'])
     def handle_webhook():
         """Handle incoming webhook from n8n/Airtable."""
@@ -43,7 +43,13 @@ def create_webhook_blueprint() -> Blueprint:
             payload = request.json
             if isinstance(payload, list) and len(payload) > 0:
                 payload = payload[0]
-            
+            if not isinstance(payload, dict):
+                logger.error("Invalid payload format: expected dict, got %s", type(payload).__name__)
+                return jsonify({
+                    'success': False,
+                    'error': 'Invalid payload format'
+                }), 400
+
             body = payload.get('body', {})
             
             # Validate payload
@@ -72,8 +78,7 @@ def create_webhook_blueprint() -> Blueprint:
                 account_id=account_id,
                 carrier=carrier,
                 airtable_service=airtable_service,
-                github_service=github_service,
-                aggregator_service=aggregator_service
+                github_service=github_service
             )
             
             return jsonify({
@@ -98,8 +103,7 @@ def process_report(
     account_id: str,
     carrier: str,
     airtable_service: AirtableService,
-    github_service: GitHubService,
-    aggregator_service: AggregatorService
+    github_service: GitHubService
 ) -> Dict[str, Any]:
     """
     Process a report request.
@@ -112,76 +116,60 @@ def process_report(
         carrier: Carrier company name
         airtable_service: Airtable service instance
         github_service: GitHub service instance
-        aggregator_service: Aggregator service instance
         
     Returns:
         Processing result dictionary
     """
     try:
-        # Step 1: Fetch linked keyword performance records
-        logger.info(f"Fetching keyword performance for report: {report_id}")
-        keyword_records = airtable_service.get_linked_keyword_performance(
+        # Step 1: Get the record from My SF Domain Reports
+        logger.info(f"Fetching record: {report_id}")
+        record = airtable_service.get_record_by_id(
             report_id,
-            config.AIRTABLE_KEYWORD_PERF_TABLE
+            config.AIRTABLE_REPORTS_TABLE
         )
-        
-        if not keyword_records:
-            logger.warning(f"No keyword performance records found for report: {report_id}")
-        
-        # Step 2: Aggregate metrics
-        logger.info("Aggregating metrics")
-        aggregated_metrics = aggregator_service.aggregate_keyword_performance(keyword_records)
-        
+        if not record:
+            raise ValueError(f"Record not found: {report_id}")
+        # Step 2: Extract rollup values from the record
+        fields = record.get('fields', {})
+        metrics = {
+            'Cost': fields.get('Cost (from Keyword Performance)', 0),
+            'Phone Clicks': fields.get('Phone Clicks (from Keyword Performance)', 0),
+            'SMS Clicks': fields.get('SMS Clicks (from Keyword Performance)', 0),
+            'Quote Starts': fields.get('Quote Starts (from Keyword Performance)', 0),
+            'Conversions': fields.get('Conversions (from Keyword Performance)', 0),
+        }
+        logger.info(f"Extracted metrics: {metrics}")
         # Step 3: Generate HTML report
         logger.info("Generating HTML report")
         html_content = ReportTemplate.generate_report(
-            metrics=aggregated_metrics,
+            metrics=metrics,
             account_id=account_id,
             carrier_company=carrier,
             date_start=date_start,
             date_end=date_end
         )
-        
         # Step 4: Upload to GitHub Pages
         logger.info("Uploading report to GitHub Pages")
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f"report_{account_id}_{timestamp}.html"
-        
         report_url = github_service.upload_report(
             content=html_content,
             filename=filename,
             path=config.GITHUB_REPORTS_PATH
         )
-        
-        # Step 5: Create report record in Airtable
-        logger.info("Creating report record in Airtable")
-        report_record = ReportRecord(
-            report_url=report_url,
-            status="needs analysis",
-            linked_report_id=report_id,
-            account_id=account_id,
-            date_range=f"{date_start} to {date_end}",
-            generated_at=datetime.now().isoformat(),
-            aggregated_metrics=json.dumps(aggregated_metrics.to_dict())
+        # Step 5: Update the record with the report URL
+        logger.info("Updating record with report URL")
+        updated_record = airtable_service.update_report_url(
+            record_id=report_id,
+            report_url=report_url
         )
-        
-        created_record = airtable_service.create_report_record(
-            report_record,
-            config.AIRTABLE_REPORTS_TABLE
-        )
-        
-        # Calculate summary statistics
-        summary_stats = aggregator_service.calculate_summary_stats(aggregated_metrics)
-        
         logger.info(f"Report processing complete. URL: {report_url}")
-        
         return {
             'report_url': report_url,
-            'report_record_id': created_record['id'],
-            'metrics_summary': summary_stats,
+            'record_id': report_id,
+            'metrics': metrics,
             'processing_time': datetime.now().isoformat()
         }
-        
     except Exception as e:
         logger.error(f"Error processing report: {str(e)}", exc_info=True)
         raise

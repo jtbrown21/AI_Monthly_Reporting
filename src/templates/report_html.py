@@ -1,9 +1,8 @@
 """
 HTML report template generation.
 """
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
-from src.services.aggregator import AggregatedMetrics
 
 
 class ReportTemplate:
@@ -11,18 +10,18 @@ class ReportTemplate:
     
     @staticmethod
     def generate_report(
-        metrics: AggregatedMetrics,
+        metrics: Dict[str, Any],
         account_id: str,
         carrier_company: str,
         date_start: str,
         date_end: str,
-        additional_data: Dict[str, Any] = None
+        additional_data: Optional[Dict[str, Any]] = None
     ) -> str:
         """
-        Generate HTML report from aggregated metrics.
+        Generate HTML report from metrics data.
         
         Args:
-            metrics: Aggregated metrics data
+            metrics: Dictionary with Cost, Phone Clicks, SMS Clicks, etc.
             account_id: Account identifier
             carrier_company: Carrier company name
             date_start: Report start date
@@ -33,14 +32,16 @@ class ReportTemplate:
             Generated HTML report as string
         """
         # Format values for display
-        formatted_cost = f"${metrics.cost:,.2f}"
-        formatted_cpc = f"${metrics.cost_per_click:.2f}"
+        formatted_cost = f"${metrics.get('Cost', 0):,.2f}"
+        cost_per_click = metrics.get('Cost', 0) / metrics.get('Clicks', 1) if metrics.get('Clicks', 0) > 0 else 0
+        formatted_cpc = f"${cost_per_click:.2f}"
+        conversion_rate = (metrics.get('Conversions', 0) / metrics.get('Clicks', 1) * 100) if metrics.get('Clicks', 0) > 0 else 0
         
         # Generate metric cards
-        metric_cards = ReportTemplate._generate_metric_cards(metrics)
+        metric_cards = ReportTemplate._generate_metric_cards(metrics, cost_per_click, conversion_rate)
         
         # Generate performance insights
-        insights = ReportTemplate._generate_insights(metrics)
+        insights = ReportTemplate._generate_insights(metrics, cost_per_click, conversion_rate)
         
         html = f"""
 <!DOCTYPE html>
@@ -76,7 +77,6 @@ class ReportTemplate:
         
         <footer class="report-footer">
             <p>Report generated on {datetime.now().strftime('%B %d, %Y at %I:%M %p')}</p>
-            <p>Total records analyzed: {metrics.record_count}</p>
         </footer>
     </div>
 </body>
@@ -85,17 +85,17 @@ class ReportTemplate:
         return html
     
     @staticmethod
-    def _generate_metric_cards(metrics: AggregatedMetrics) -> str:
+    def _generate_metric_cards(metrics: Dict[str, Any], cost_per_click: float, conversion_rate: float) -> str:
         """Generate HTML for metric cards."""
         cards_data = [
-            ("Total Clicks", f"{metrics.clicks:,}", "primary"),
-            ("Conversions", f"{metrics.conversions:,}", "success"),
-            ("Total Cost", f"${metrics.cost:,.2f}", "warning"),
-            ("Cost Per Click", f"${metrics.cost_per_click:.2f}", "info"),
-            ("Phone Clicks", f"{metrics.phone_clicks:,}", "primary"),
-            ("SMS Clicks", f"{metrics.sms_clicks:,}", "primary"),
-            ("Quote Starts", f"{metrics.quote_starts:,}", "success"),
-            ("Conversion Rate", f"{metrics.conversion_rate:.1f}%", "info")
+            ("Total Clicks", f"{metrics.get('Clicks', 0):,}", "primary"),
+            ("Conversions", f"{metrics.get('Conversions', 0):,}", "success"),
+            ("Total Cost", f"${metrics.get('Cost', 0):,.2f}", "warning"),
+            ("Cost Per Click", f"${cost_per_click:.2f}", "info"),
+            ("Phone Clicks", f"{metrics.get('Phone Clicks', 0):,}", "primary"),
+            ("SMS Clicks", f"{metrics.get('SMS Clicks', 0):,}", "primary"),
+            ("Quote Starts", f"{metrics.get('Quote Starts', 0):,}", "success"),
+            ("Conversion Rate", f"{conversion_rate:.1f}%", "info")
         ]
         
         cards_html = ""
@@ -110,15 +110,15 @@ class ReportTemplate:
         return cards_html
     
     @staticmethod
-    def _generate_insights(metrics: AggregatedMetrics) -> str:
+    def _generate_insights(metrics: Dict[str, Any], cost_per_click: float, conversion_rate: float) -> str:
         """Generate insights based on metrics."""
         insights_html = "<div class='insights-container'>"
         
         # Performance insight
-        if metrics.conversion_rate > 3:
+        if conversion_rate > 3:
             performance = "excellent"
             icon = "✅"
-        elif metrics.conversion_rate > 1:
+        elif conversion_rate > 1:
             performance = "good"
             icon = "👍"
         else:
@@ -128,28 +128,28 @@ class ReportTemplate:
         insights_html += f"""
             <div class="insight-card">
                 <h3>{icon} Conversion Performance</h3>
-                <p>Your conversion rate of <strong>{metrics.conversion_rate:.1f}%</strong> is {performance}.</p>
+                <p>Your conversion rate of <strong>{conversion_rate:.1f}%</strong> is {performance}.</p>
             </div>
         """
         
         # Cost efficiency insight
-        if metrics.cost_per_click > 0:
+        if cost_per_click > 0:
             insights_html += f"""
                 <div class="insight-card">
                     <h3>💰 Cost Efficiency</h3>
-                    <p>Average cost per click: <strong>${metrics.cost_per_click:.2f}</strong></p>
-                    <p>Total investment: <strong>${metrics.cost:,.2f}</strong> for <strong>{metrics.clicks:,}</strong> clicks</p>
+                    <p>Average cost per click: <strong>${cost_per_click:.2f}</strong></p>
+                    <p>Total investment: <strong>${metrics.get('Cost', 0):,.2f}</strong> for <strong>{metrics.get('Clicks', 0):,}</strong> clicks</p>
                 </div>
             """
         
         # Engagement insight
-        phone_rate = (metrics.phone_clicks / metrics.clicks * 100) if metrics.clicks > 0 else 0
+        phone_rate = (metrics.get('Phone Clicks', 0) / metrics.get('Clicks', 1) * 100) if metrics.get('Clicks', 0) > 0 else 0
         if phone_rate > 0:
             insights_html += f"""
                 <div class="insight-card">
                     <h3>📞 Customer Engagement</h3>
                     <p><strong>{phone_rate:.1f}%</strong> of clicks resulted in phone calls</p>
-                    <p>Total phone interactions: <strong>{metrics.phone_clicks:,}</strong></p>
+                    <p>Total phone interactions: <strong>{metrics.get('Phone Clicks', 0):,}</strong></p>
                 </div>
             """
         

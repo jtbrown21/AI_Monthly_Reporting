@@ -1,6 +1,9 @@
 """
 Main Flask application for SF Domain Reports.
 """
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Flask, jsonify
 from config.settings import config
 from src.handlers.webhook import create_webhook_blueprint

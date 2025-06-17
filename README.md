@@ -1,10 +1,12 @@
 # SF Domain Reports
 
-A modular webhook handler for generating and managing SF Domain performance reports. This application receives webhooks from Airtable, aggregates keyword performance data, generates HTML reports, and hosts them on GitHub Pages.
+A modular webhook handler for generating and managing SF Domain performance reports. This application receives webhooks from Airtable, reads rollup values directly from the My SF Domain Reports record, generates HTML reports, and hosts them on GitHub Pages. The generated report URL is written back to the same Airtable record.
 
 ## Features
 
-- **Phase 1**: Automated report generation from Airtable data
+- **Simple Workflow**: Reads rollup fields from a single Airtable record, generates a report, and updates that record
+- **No Aggregation Logic**: All aggregation is handled by Airtable rollup fields
+- **No New Records**: The report URL is written back to the triggering record
 - **Modular Architecture**: Clean separation of concerns with services, handlers, and templates
 - **Flexible Configuration**: Environment-based configuration
 - **GitHub Pages Integration**: Automatic report hosting
@@ -95,11 +97,10 @@ The application exposes a webhook endpoint at `/webhook` that expects the follow
 ### Report Generation Flow
 
 1. Webhook received with report parameters
-2. Query Airtable for linked keyword performance records
-3. Aggregate metrics (clicks, conversions, costs, etc.)
-4. Generate responsive HTML report
-5. Upload to GitHub Pages
-6. Create tracking record in Airtable
+2. Read rollup values (Cost, Clicks, Conversions, etc.) from the My SF Domain Reports record
+3. Generate responsive HTML report
+4. Upload to GitHub Pages
+5. Update the same Airtable record with the generated report URL
 
 ## Development
 
@@ -119,17 +120,11 @@ Use ngrok to expose your local server:
 ngrok http 5000
 ```
 
-### Adding New Metrics
-
-1. Update `AggregatedMetrics` in `src/services/aggregator.py`
-2. Add field mapping in `AggregatorService.FIELD_MAPPING`
-3. Update report template in `src/templates/report_html.py`
-
 ### Customizing Reports
 
 Edit `src/templates/report_html.py` to modify:
 - Report layout and design
-- Metrics displayed
+- Metrics displayed (uses keys like 'Cost', 'Clicks', etc.)
 - Insights and calculations
 - CSS styling
 
@@ -150,10 +145,10 @@ Service information endpoint
 - Check Render logs for webhook processing details
 - Failed uploads are logged with full error details
 
-## Future Enhancements (Phases 2 & 3)
+## Future Enhancements
 
-- **Phase 2**: Manual analysis integration
-- **Phase 3**: Email automation with Postmark
+- Email automation with Postmark
+- Additional report customization options
 
 ## Contributing
 
