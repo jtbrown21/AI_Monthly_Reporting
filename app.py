@@ -60,4 +60,4 @@ if __name__ == '__main__':
         debug=config.DEBUG
     )
 
-    app = create_app()
+app = create_app()
