@@ -138,11 +138,6 @@ def process_report(
         sms_clicks = fields.get('SMS Clicks (from Keyword Performance)', 0)
         quote_starts = fields.get('Quote Starts (from Keyword Performance)', 0)
         conversions = fields.get('Conversions (from Keyword Performance)', 0)
-        # Calculate cost_per_lead (avoid division by zero)
-        try:
-            cost_per_lead = round(float(cost) / float(conversions), 2) if float(conversions) else 0.0
-        except Exception:
-            cost_per_lead = 0.0
         # Format report_month as 'Month YYYY' from date_start
         try:
             report_month = datetime.strptime(date_start, '%Y-%m-%d').strftime('%B %Y')
@@ -159,11 +154,18 @@ def process_report(
         sms_clicks = round_up(sms_clicks)
         quote_starts = round_up(quote_starts)
         conversions = round_up(conversions)
-        # cost_per_lead may be float, but round up to int for display
+        # Calculate total_leads as the aggregate of quote_starts, phone_clicks, sms_clicks, conversions
+        total_leads = quote_starts + phone_clicks + sms_clicks + conversions
+        # Calculate cost_per_lead using total_leads (avoid division by zero)
+        try:
+            cost_per_lead = round(float(cost) / float(total_leads), 2) if float(total_leads) else 0.0
+        except Exception:
+            cost_per_lead = 0.0
         cost_per_lead = round_up(cost_per_lead)
         # Prepare data for template
         template_data = {
             'report_month': report_month,
+            'total_leads': total_leads,
             'conversions': conversions,
             'cost': cost,
             'cost_per_lead': cost_per_lead,

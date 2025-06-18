@@ -201,6 +201,36 @@ To add new dynamic values to your report:
 **Tip:**
 - Only use Jinja2 variables (e.g., `{{ variable_name }}`) in the HTML template. All logic and data preparation should be done in Python.
 
+### Report Variable Mapping and Calculations
+
+The following variables are passed from Python to the Jinja2 HTML template:
+
+- `report_month`: The month and year of the report, formatted as "Month YYYY" (e.g., "June 2025").
+- `quote_starts`: Number of quote starts (from Airtable field).
+- `phone_clicks`: Number of website phone clicks (from Airtable field).
+- `sms_clicks`: Number of website SMS clicks (from Airtable field).
+- `conversions`: Number of conversions (from Airtable field).
+- `cost`: Total investment (from Airtable field, rounded up to nearest integer).
+- `total_leads`: The sum of `quote_starts`, `phone_clicks`, `sms_clicks`, and `conversions`. This is shown as "New Leads Generated" in the report.
+- `cost_per_lead`: Calculated as `cost` divided by `total_leads` (rounded up to nearest integer). If `total_leads` is zero, this will be 0.
+
+#### Example Calculation
+
+If your Airtable record has:
+- Quote Starts: 3
+- Phone Clicks: 5
+- SMS Clicks: 2
+- Conversions: 7
+- Cost: 123
+
+Then:
+- `total_leads = 3 + 5 + 2 + 7 = 17`
+- `cost_per_lead = 123 / 17 ≈ 8` (rounded up)
+
+All these variables are available for use in the HTML template as `{{ variable_name }}`.
+
+---
+
 ## API Reference
 
 ### POST /webhook
