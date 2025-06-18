@@ -9,6 +9,7 @@ from typing import Dict, Any
 import json
 import logging
 from datetime import datetime
+import math
 
 from config.settings import config
 from src.services.airtable import AirtableService
@@ -147,6 +148,19 @@ def process_report(
             report_month = datetime.strptime(date_start, '%Y-%m-%d').strftime('%B %Y')
         except Exception:
             report_month = date_start
+        # Normalize numerical fields to 0 decimal places (round up)
+        def round_up(val):
+            try:
+                return int(math.ceil(float(val)))
+            except Exception:
+                return val
+        cost = round_up(cost)
+        phone_clicks = round_up(phone_clicks)
+        sms_clicks = round_up(sms_clicks)
+        quote_starts = round_up(quote_starts)
+        conversions = round_up(conversions)
+        # cost_per_lead may be float, but round up to int for display
+        cost_per_lead = round_up(cost_per_lead)
         # Prepare data for template
         template_data = {
             'report_month': report_month,
@@ -166,7 +180,13 @@ def process_report(
         # Step 4: Upload to GitHub Pages
         logger.info("Uploading report to GitHub Pages")
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f"report_{account_id}_{timestamp}.html"
+        # Get client name and extract last name
+        client_name = fields.get('Client Name', 'Client')
+        last_name = client_name.strip().split(' ')[-1] if client_name.strip() else 'Client'
+        # Format report_month for filename (e.g., June-2025)
+        safe_report_month = report_month.replace(' ', '-')
+        # Build filename as {last_name}_{report_month}.html
+        filename = f"{last_name}_{safe_report_month}.html"
         report_url = github_service.upload_report(
             content=html_content,
             filename=filename,
