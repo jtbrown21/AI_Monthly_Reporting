@@ -128,6 +128,79 @@ Edit `src/templates/report_html.py` to modify:
 - Insights and calculations
 - CSS styling
 
+## Report Template System (Jinja2)
+
+This project now uses [Jinja2](https://palletsprojects.com/p/jinja/) for HTML report generation. The Python logic and HTML template are separated for maintainability and flexibility.
+
+- **Python Logic:** All report generation logic is in `src/templates/report_html.py`.
+- **HTML Template:** The HTML structure is in `src/templates/report_template.html`.
+
+### How It Works
+
+1. The `ReportTemplate.generate_report(data)` method loads and renders the HTML template using Jinja2.
+2. Pass a dictionary with your report data (e.g., `month`, `total_sales`, etc.) to this method.
+3. The template uses Jinja2 variables (e.g., `{{ month }}`) to display dynamic content.
+
+#### Example Usage
+
+```python
+from src.templates.report_html import ReportTemplate
+
+data = {
+    "month": "June 2025",
+    "total_sales": 10000,
+    "new_customers": 25
+}
+html_report = ReportTemplate.generate_report(data)
+print(html_report)
+```
+
+#### Customizing the Template
+- Edit `src/templates/report_template.html` to change the HTML structure or add new variables.
+- Do not include Python code in the HTML file—use Jinja2 template variables instead.
+
+#### Dependencies
+- Jinja2 is required. Install with:
+  ```bash
+  pip install jinja2
+  ```
+
+### Mapping Additional Values to the HTML Template
+
+To add new dynamic values to your report:
+
+1. **Add a Jinja2 variable in your HTML template**
+   - Open `src/templates/report_template.html` and insert a variable using double curly braces, e.g.:
+     ```html
+     <div>{{ my_new_value }}</div>
+     ```
+
+2. **Pass the value from Python**
+   - In your Python code (e.g., in `src/templates/report_html.py`), add the new value to the data dictionary:
+     ```python
+     data = {
+         # ...existing values...
+         "my_new_value": value_from_airtable_or_logic,
+     }
+     html_report = ReportTemplate.generate_report(data)
+     ```
+
+3. **Map Airtable fields to template variables**
+   - Use readable variable names in your template and map them from Airtable fields in Python:
+     ```python
+     data = {
+         "cost": record['fields'].get('Cost (from Keyword Performance)', 0),
+         "phone_clicks": record['fields'].get('Phone Clicks (from Keyword Performance)', 0),
+         # Add more mappings as needed
+     }
+     ```
+
+4. **Preview the result**
+   - Render the report and open the generated HTML in your browser to verify the new value appears as expected.
+
+**Tip:**
+- Only use Jinja2 variables (e.g., `{{ variable_name }}`) in the HTML template. All logic and data preparation should be done in Python.
+
 ## API Reference
 
 ### POST /webhook

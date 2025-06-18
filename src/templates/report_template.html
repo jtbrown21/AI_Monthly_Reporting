@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Marketing Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #F2E3DA;
+            color: #3D4344;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+
+        .report-container {
+            max-width: 720px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #003D48;
+            color: white;
+            padding: 36px 32px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+        }
+
+        .header .subtitle {
+            font-size: 15px;
+            opacity: 0.85;
+        }
+
+        .summary-section {
+            padding: 32px;
+            background: linear-gradient(to bottom, #E6EBED 0%, #ffffff 100%);
+        }
+
+        .primary-metric {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .primary-metric .label {
+            font-size: 14px;
+            color: #3D4344;
+            font-weight: 500;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.7;
+        }
+
+        .primary-metric .value {
+            font-size: 56px;
+            font-weight: 700;
+            color: #003D48;
+            line-height: 1;
+            margin-bottom: 16px;
+        }
+
+        .cost-per-lead-box {
+            background-color: #E67151;
+            color: white;
+            padding: 20px 24px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(230, 113, 81, 0.2);
+        }
+
+        .cost-per-lead-box .label {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+
+        .cost-per-lead-box .value {
+            font-size: 32px;
+            font-weight: 700;
+        }
+
+        .secondary-metrics {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        .secondary-metric {
+            flex: 1;
+            background-color: white;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #E6EBED;
+        }
+
+        .secondary-metric .value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #3D4344;
+        }
+
+        .secondary-metric .label {
+            font-size: 12px;
+            color: #3D4344;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+
+        .details-section {
+            padding: 40px 32px;
+        }
+
+        .details-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #003D48;
+            margin-bottom: 28px;
+            text-align: left;
+            letter-spacing: -0.02em;
+        }
+
+        .lead-sources {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .lead-source {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            background-color: #F2E3DA;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .lead-source:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .source-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            flex-shrink: 0;
+            margin-right: 20px;
+        }
+
+        .source-info {
+            flex: 1;
+        }
+
+        .source-header {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .source-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #003D48;
+        }
+
+        .best-badge {
+            background-color: #2E7D32;
+            color: white;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .source-description {
+            font-size: 13px;
+            color: #3D4344;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+
+        .source-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #003D48;
+            margin-left: auto;
+            padding-left: 20px;
+        }
+
+        .lead-bar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            background-color: rgba(230, 113, 81, 0.1);
+            z-index: 0;
+        }
+
+        .lead-source>* {
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer {
+            background-color: #003D48;
+            color: white;
+            padding: 24px 32px;
+            text-align: center;
+        }
+
+        .footer-text {
+            font-size: 14px;
+            opacity: 0.85;
+        }
+
+        @media (max-width: 600px) {
+            .secondary-metrics {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .source-value {
+                font-size: 28px;
+            }
+
+            .source-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+                margin-right: 16px;
+            }
+
+            .primary-metric .value {
+                font-size: 48px;
+            }
+        }
+
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+
+            .report-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="report-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Your Monthly Marketing Report</h1>
+            <div class="subtitle">{{ report_month }}</div>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="summary-section">
+            <div class="primary-metric">
+                <div class="label">New Leads Generated</div>
+                <div class="value">{{ conversions }}</div>
+            </div>
+
+            <div style="display: flex; gap: 32px; justify-content: center; align-items: center; margin-top: 32px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 24px; font-weight: 600; color: #003D48;">${{ cost }}</div>
+                    <div style="font-size: 13px; color: #3D4344; margin-top: 4px;">Total Investment</div>
+                </div>
+                <div style="width: 1px; height: 40px; background-color: #E6EBED;"></div>
+                <div style="text-align: center;">
+                    <div style="font-size: 24px; font-weight: 600; color: #003D48;">${{ cost_per_lead }}</div>
+                    <div style="font-size: 13px; color: #3D4344; margin-top: 4px;">Cost per Lead</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Details Section -->
+        <div class="details-section">
+            <h2 class="details-title">Where Your Leads Came From</h2>
+
+            <div class="lead-sources">
+                <div class="lead-source">
+                    <div class="source-icon">📄</div>
+                    <div class="source-info">
+                        <div class="source-header">
+                            <div class="source-label">Quote Starts</div>
+                        </div>
+                        <div class="source-description">Clicks to start a quote on your website</div>
+                    </div>
+                    <div class="source-value">{{ quote_starts }}</div>
+                </div>
+
+                <div class="lead-source">
+                    <div class="source-icon">📞</div>
+                    <div class="source-info">
+                        <div class="source-header">
+                            <div class="source-label">Phone Calls from Ads</div>
+                        </div>
+                        <div class="source-description">Calls directly from your Google Ad</div>
+                    </div>
+                    <div class="source-value">{{ conversions }}</div>
+                </div>
+
+                <div class="lead-source">
+                    <div class="source-icon">📱</div>
+                    <div class="source-info">
+                        <div class="source-header">
+                            <div class="source-label">Website Phone Clicks</div>
+                        </div>
+                        <div class="source-description">Clicks from your website to call your office</div>
+                    </div>
+                    <div class="source-value">{{ phone_clicks }}</div>
+                </div>
+
+                <div class="lead-source">
+                    <div class="source-icon">💭</div>
+                    <div class="source-info">
+                        <div class="source-header">
+                            <div class="source-label">Website SMS Texts</div>
+                        </div>
+                        <div class="source-description">Clicks on your website to text your office</div>
+                    </div>
+                    <div class="source-value">{{ sms_clicks }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-text">
+                Questions about this report? We're here to help!
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

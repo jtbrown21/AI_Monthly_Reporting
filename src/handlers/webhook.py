@@ -142,11 +142,8 @@ def process_report(
         # Step 3: Generate HTML report
         logger.info("Generating HTML report")
         html_content = ReportTemplate.generate_report(
-            metrics=metrics,
-            account_id=account_id,
-            carrier_company=carrier,
-            date_start=date_start,
-            date_end=date_end
+            metrics,
+            account_id
         )
         # Step 4: Upload to GitHub Pages
         logger.info("Uploading report to GitHub Pages")
