@@ -180,8 +180,13 @@ def process_report(
         # Step 4: Upload to GitHub Pages
         logger.info("Uploading report to GitHub Pages")
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        # Get client name and extract last name
+        # Get client name and extract last name (handle Airtable lookup/array fields)
         client_name = fields.get('Client Name', 'Client')
+        # Airtable lookup fields are always lists, even if single value
+        if isinstance(client_name, list):
+            # Remove empty/None values, join if multiple names (rare)
+            client_name = ' '.join([str(x) for x in client_name if x]) if client_name else 'Client'
+        client_name = str(client_name)
         last_name = client_name.strip().split(' ')[-1] if client_name.strip() else 'Client'
         # Format report_month for filename (e.g., June-2025)
         safe_report_month = report_month.replace(' ', '-')
