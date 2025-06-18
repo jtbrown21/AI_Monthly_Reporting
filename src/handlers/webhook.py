@@ -131,18 +131,37 @@ def process_report(
             raise ValueError(f"Record not found: {report_id}")
         # Step 2: Extract rollup values from the record
         fields = record.get('fields', {})
-        metrics = {
-            'Cost': fields.get('Cost (from Keyword Performance)', 0),
-            'Phone Clicks': fields.get('Phone Clicks (from Keyword Performance)', 0),
-            'SMS Clicks': fields.get('SMS Clicks (from Keyword Performance)', 0),
-            'Quote Starts': fields.get('Quote Starts (from Keyword Performance)', 0),
-            'Conversions': fields.get('Conversions (from Keyword Performance)', 0),
+        # Map Airtable fields to template variables (lowercase, underscores)
+        cost = fields.get('Cost (from Keyword Performance)', 0)
+        phone_clicks = fields.get('Phone Clicks (from Keyword Performance)', 0)
+        sms_clicks = fields.get('SMS Clicks (from Keyword Performance)', 0)
+        quote_starts = fields.get('Quote Starts (from Keyword Performance)', 0)
+        conversions = fields.get('Conversions (from Keyword Performance)', 0)
+        # Calculate cost_per_lead (avoid division by zero)
+        try:
+            cost_per_lead = round(float(cost) / float(conversions), 2) if float(conversions) else 0.0
+        except Exception:
+            cost_per_lead = 0.0
+        # Format report_month as 'Month YYYY' from date_start
+        try:
+            report_month = datetime.strptime(date_start, '%Y-%m-%d').strftime('%B %Y')
+        except Exception:
+            report_month = date_start
+        # Prepare data for template
+        template_data = {
+            'report_month': report_month,
+            'conversions': conversions,
+            'cost': cost,
+            'cost_per_lead': cost_per_lead,
+            'quote_starts': quote_starts,
+            'phone_clicks': phone_clicks,
+            'sms_clicks': sms_clicks
         }
-        logger.info(f"Extracted metrics: {metrics}")
+        logger.info(f"Extracted metrics for template: {template_data}")
         # Step 3: Generate HTML report
         logger.info("Generating HTML report")
         html_content = ReportTemplate.generate_report(
-            metrics
+            template_data
         )
         # Step 4: Upload to GitHub Pages
         logger.info("Uploading report to GitHub Pages")
@@ -163,7 +182,7 @@ def process_report(
         return {
             'report_url': report_url,
             'record_id': report_id,
-            'metrics': metrics,
+            'metrics': template_data,
             'processing_time': datetime.now().isoformat()
         }
     except Exception as e:
