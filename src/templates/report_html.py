@@ -12,7 +12,7 @@ class ReportTemplate:
     @staticmethod
     def generate_report(
         data: Dict[str, Any],
-        template_name: str = "report_template_v2.html"
+        template_name: str = "report_template_v3.html"
     ) -> str:
         """
         Render the HTML report from the template and data.
