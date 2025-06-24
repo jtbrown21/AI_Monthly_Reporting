@@ -8,7 +8,7 @@ from flask import Blueprint, request, jsonify
 from typing import Dict, Any
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 import math
 
 from config.settings import config
@@ -138,11 +138,24 @@ def process_report(
         sms_clicks = fields.get('SMS Clicks (from Keyword Performance)', 0)
         quote_starts = fields.get('Quote Starts (from Keyword Performance)', 0)
         conversions = fields.get('Conversions (from Keyword Performance)', 0)
-        # Format report_month as 'Month YYYY' from date_start
+        # Format report_month based on Date Start and Date End
         try:
-            report_month = datetime.strptime(date_start, '%Y-%m-%d').strftime('%B %Y')
+            start_dt = datetime.strptime(date_start, '%Y-%m-%d')
+            end_dt = datetime.strptime(date_end, '%Y-%m-%d')
+            # Check if the range covers the full month
+            first_of_month = start_dt.replace(day=1)
+            # Find last day of month
+            if start_dt.month == 12:
+                next_month = start_dt.replace(year=start_dt.year+1, month=1, day=1)
+            else:
+                next_month = start_dt.replace(month=start_dt.month+1, day=1)
+            last_of_month = next_month - timedelta(days=1)
+            if start_dt == first_of_month and end_dt == last_of_month:
+                report_month = start_dt.strftime('%B %Y')
+            else:
+                report_month = f"{start_dt.strftime('%m-%d-%Y')}-{end_dt.strftime('%m-%d-%Y')}"
         except Exception:
-            report_month = date_start
+            report_month = f"{date_start}-{date_end}"
         # Normalize numerical fields to 0 decimal places (round up)
         def round_up(val):
             try:
