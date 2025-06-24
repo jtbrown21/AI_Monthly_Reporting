@@ -1,6 +1,8 @@
 # SF Domain Reports
 
-A modular webhook handler for generating and managing SF Domain performance reports. This application receives webhooks from Airtable, reads rollup values directly from the My SF Domain Reports record, generates HTML reports, and hosts them on GitHub Pages. The generated report URL is written back to the same Airtable record.
+A modular webhook handler for generating and managing SF Domain performance reports. This application receives webhooks from Airtable, reads rollup values directly from the My SF Domain Reports record, generates HTML reports, and hosts them on a custom domain (https://app.agentinsider.co). The generated report URL is written back to the same Airtable record.
+
+> **Note:** As of June 2025, reports are no longer hosted at the default GitHub Pages domain. All reports are now available at your custom domain: https://app.agentinsider.co
 
 ## Features
 
@@ -9,7 +11,7 @@ A modular webhook handler for generating and managing SF Domain performance repo
 - **No New Records**: The report URL is written back to the triggering record
 - **Modular Architecture**: Clean separation of concerns with services, handlers, and templates
 - **Flexible Configuration**: Environment-based configuration
-- **GitHub Pages Integration**: Automatic report hosting
+- **Custom Domain Hosting**: Automatic report hosting at https://app.agentinsider.co
 - **Comprehensive Logging**: Detailed logging for debugging and monitoring
 - **Type Safety**: Python type hints throughout
 
@@ -99,7 +101,7 @@ The application exposes a webhook endpoint at `/webhook` that expects the follow
 1. Webhook received with report parameters
 2. Read rollup values (Cost, Clicks, Conversions, etc.) from the My SF Domain Reports record
 3. Generate responsive HTML report
-4. Upload to GitHub Pages
+4. Upload to your custom domain (https://app.agentinsider.co)
 5. Update the same Airtable record with the generated report URL
 
 ## Development

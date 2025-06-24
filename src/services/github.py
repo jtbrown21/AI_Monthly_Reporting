@@ -94,8 +94,8 @@ class GitHubService:
                 raise Exception(f"Failed to upload to GitHub: {response.status_code}")
             
             # Generate GitHub Pages URL
-            pages_url = f"https://{self.username}.github.io/{self.repo_name}/{file_path}"
-            
+            # Use custom domain instead of github.io
+            pages_url = f"https://app.agentinsider.co/{file_path}"
             logger.info(f"Successfully uploaded report to: {pages_url}")
             return pages_url
             
