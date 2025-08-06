@@ -35,6 +35,10 @@ class Config:
             AIRTABLE_BASE_ID=os.environ.get('AIRTABLE_BASE_ID', ''),
             GITHUB_TOKEN=os.environ.get('GITHUB_TOKEN', ''),
             GITHUB_REPO=os.environ.get('GITHUB_REPO', ''),
+            AIRTABLE_REPORTS_TABLE=os.environ.get('AIRTABLE_REPORTS_TABLE', 'My SF Domain Reports'),
+            AIRTABLE_KEYWORD_PERF_TABLE=os.environ.get('AIRTABLE_KEYWORD_PERF_TABLE', 'Keyword Performance'),
+            GITHUB_BRANCH=os.environ.get('GITHUB_BRANCH', 'main'),
+            GITHUB_REPORTS_PATH=os.environ.get('GITHUB_REPORTS_PATH', 'reports'),
             PORT=int(os.environ.get('PORT', 5000)),
             DEBUG=os.environ.get('DEBUG', 'False').lower() == 'true',
             LOG_LEVEL=os.environ.get('LOG_LEVEL', 'INFO')
